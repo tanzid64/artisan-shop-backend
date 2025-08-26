@@ -33,6 +33,8 @@ class User extends Authenticatable implements JWTSubject
 
     protected $appends = [
         'avatar_url',
+        'is_email_verified',
+        'status_name',
     ];
 
     /**
@@ -43,6 +45,7 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
+        'avatar',
     ];
 
     /**
@@ -54,6 +57,7 @@ class User extends Authenticatable implements JWTSubject
     {
         return [
             'email_verified_at' => 'datetime',
+            'status' => 'boolean',
             'password' => 'hashed',
         ];
     }
@@ -77,15 +81,23 @@ class User extends Authenticatable implements JWTSubject
     // ** Attribute Customizations **
     public function getEmailVerifiedAtAttribute($value)
     {
-        return $value ? Carbon::parse($value)->format('d M Y, H:i:s A') : null;
+        return $value ? Carbon::parse($value)->format('d M Y, h:i:s A') : null;
     }
     public function getCreatedAtAttribute($value)
     {
-        return $value ? Carbon::parse($value)->format('d M Y, H:i:s A') : null;
+        return $value ? Carbon::parse($value)->format('d M Y, h:i:s A') : null;
     }
     public function getUpdatedAtAttribute($value)
     {
-        return $value ? Carbon::parse($value)->format('d M Y, H:i:s A') : null;
+        return $value ? Carbon::parse($value)->format('d M Y, h:i:s A') : null;
+    }
+    public function getIsEmailVerifiedAttribute()
+    {
+        return $this->email_verified_at ? true : false;
+    }
+    public function getStatusNameAttribute()
+    {
+        return $this->status ? "Active" : "Inactive";
     }
     public function getAvatarUrlAttribute()
     {

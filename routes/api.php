@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    $user = User::first();
     return [
         'name' => 'Artisan Shop API Collection',
         'Timezone' => "Asia/Dhaka",
@@ -16,6 +15,14 @@ Route::get('/', function () {
         'Author URL' => "https://artisan-shop.com",
         'Documentation' => "https://artisan-shop.com/docs",
         'Support' => "https://artisan-shop.com/support",
-        'user' => $user,
     ];
+});
+
+// ** Auth Routes **
+Route::post('login', [AuthController::class, 'login'])->name('login');
+
+// ** Protected Routes **
+Route::middleware('jwt')->group(function () {
+    // Auth Routes
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 });

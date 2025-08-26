@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CORSMiddleware;
+use App\Http\Middleware\JWTMiddleware;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,13 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then: function () {
             // Admin Routes
-            Route::middleware(['api', 'auth:sanctum', 'role:admin'])
+            Route::middleware(['api', 'jwt', 'role:admin'])
                 ->prefix('api/admin')
                 ->as('admin.')
                 ->group(base_path('routes/admin.php'));
 
             // Vendor Routes
-            Route::middleware(['api', 'auth:sanctum', 'role:vendor'])
+            Route::middleware(['api', 'jwt', 'role:vendor'])
                 ->prefix('api/vendor')
                 ->as('vendor.')
                 ->group(base_path('routes/vendor.php'));
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
+            'jwt' => JWTMiddleware::class,
             'role' => RoleMiddleware::class,
         ]);
         // Cors Middleware for all api request
