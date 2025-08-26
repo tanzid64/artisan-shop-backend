@@ -4,4 +4,15 @@ use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [AuthController::class, 'register']);
+Route::get('/', function () {
+    return [
+        'name' => 'Artisan Shop API Collection',
+        'Timezone' => "Asia/Dhaka",
+        'Date' => now()->format('Y-m-d H:i:s'),
+        'Version' => "1.0.0",
+        'Author' => "Artisan Shop",
+        'Author URL' => "https://artisan-shop.com",
+        'Documentation' => "https://artisan-shop.com/docs",
+        'Support' => "https://artisan-shop.com/support",
+    ];
+});
