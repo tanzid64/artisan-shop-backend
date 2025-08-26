@@ -25,4 +25,6 @@ Route::post('login', [AuthController::class, 'login'])->name('login');
 Route::middleware('jwt')->group(function () {
     // Auth Routes
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('refresh', [AuthController::class, 'refresh'])->name('refresh');
+    Route::get('me', [AuthController::class, 'profile'])->name('profile');
 });

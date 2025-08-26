@@ -75,6 +75,34 @@ class AuthController extends Controller
 
     public function refresh(Request $request)
     {
-        //
+        try {
+            // Get Current Token
+            $token = JWTAuth::getToken();
+
+            if (!$token) {
+                return $this->responseError("Token not found!", null, 401);
+            }
+
+            // Refresh the token
+            $token = JWTAuth::refresh($token);
+
+            return $this->responseSuccess(['token' => $token], "Token refreshed successfully!");
+        } catch (JWTException $e) {
+            return $this->responseError("Token could not be refreshed!", ["server" => $e->getMessage()], 500);
+        } catch (\Exception $e) {
+            return $this->responseError("Token refresh failed!", ["server" => $e->getMessage()], 500);
+        }
+    }
+
+    public function profile()
+    {
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+            return $this->responseSuccess($user, "Profile retrieved successfully!");
+        } catch (JWTException $e) {
+            return $this->responseError("Invalid Token!", ["server" => $e->getMessage()], 500);
+        } catch (\Exception $e) {
+            return $this->responseError("Profile retrieval failed!", ["server" => $e->getMessage()], 500);
+        }
     }
 }
