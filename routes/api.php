@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
+    $user = User::first();
     return [
         'name' => 'Artisan Shop API Collection',
         'Timezone' => "Asia/Dhaka",
@@ -14,5 +16,6 @@ Route::get('/', function () {
         'Author URL' => "https://artisan-shop.com",
         'Documentation' => "https://artisan-shop.com/docs",
         'Support' => "https://artisan-shop.com/support",
+        'user' => $user,
     ];
 });

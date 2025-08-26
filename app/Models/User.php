@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -20,8 +22,17 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $fillable = [
         'name',
+        'username',
+        'avatar',
+        'phone',
+        'role',
+        'status',
         'email',
         'password',
+    ];
+
+    protected $appends = [
+        'avatar_url',
     ];
 
     /**
@@ -61,5 +72,23 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+
+    // ** Attribute Customizations **
+    public function getEmailVerifiedAtAttribute($value)
+    {
+        return $value ? Carbon::parse($value)->format('d M Y, H:i:s A') : null;
+    }
+    public function getCreatedAtAttribute($value)
+    {
+        return $value ? Carbon::parse($value)->format('d M Y, H:i:s A') : null;
+    }
+    public function getUpdatedAtAttribute($value)
+    {
+        return $value ? Carbon::parse($value)->format('d M Y, H:i:s A') : null;
+    }
+    public function getAvatarUrlAttribute()
+    {
+        return $this->avatar ? "" : null;
     }
 }
