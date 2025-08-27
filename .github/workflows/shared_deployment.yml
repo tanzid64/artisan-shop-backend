@@ -8,22 +8,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        image: mysql:8.0
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: laravel
-          MYSQL_USER: laravel
-          MYSQL_PASSWORD: secret
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,20 +20,10 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      - name: Create temporary .env
-        run: |
-          cp .env.example .env || touch .env
-          php artisan key:generate
-
       - name: Prepare deployment package
         run: |
           rm -rf vendor node_modules
           composer install --no-dev --optimize-autoloader
-          php artisan migrate:fresh
-          php artisan config:clear
-          php artisan route:clear
-          php artisan cache:clear
-          zip -r deploy.zip . -x ".git/*" ".github/*" "tests/*" ".env" ".htaccess"
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
@@ -58,9 +32,9 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           exclude: |
-            **/.git*
-            **/.github*
-            **/tests*
-            **/storage/logs*
+            .git
+            .github
+            tests
+            storage/logs
             .env
             .htaccess
