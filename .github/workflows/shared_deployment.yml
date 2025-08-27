@@ -9,6 +9,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        ports:
+          - 3306:3306
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
