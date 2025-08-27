@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\PasswordResetMail;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -130,11 +132,16 @@ class AuthController extends Controller
                     'role' => $user->role,
                 ],
             ];
+
+            // Log successful authentication
+            $this->logAuthentication($user->id, $user->username, true, 'login');
             // Return the token
             return $this->responseSuccess($data, "Login successful!");
         } catch (JWTException $e) {
+            $this->logAuthentication(null, $request->username, false, 'login', 'JWT Exception: ' . $e->getMessage());
             return $this->responseError("Could not create token!", ["server" => $e->getMessage()], 500);
         } catch (\Exception $e) {
+            $this->logAuthentication(null, $request->username, false, 'login', 'Exception: ' . $e->getMessage());
             return $this->responseError("Login Failed!", ["server" => $e->getMessage()], 500);
         }
     }
@@ -143,14 +150,18 @@ class AuthController extends Controller
     {
         try {
             $user = JWTAuth::parseToken()->authenticate();
+            $username = $user->username ?? "unknown";
 
             // Invalidate the JWT token
             JWTAuth::invalidate(JWTAuth::parseToken());
-
+            // Log successful logout
+            $this->logAuthentication($user->id ?? null, $username, true, 'logout');
             return $this->responseSuccess(null, "Logout successful!");
         } catch (JWTException $e) {
+            $this->logAuthentication(null, 'unknown', false, 'logout', 'JWT Exception: ' . $e->getMessage());
             return $this->responseError("Could not create token!", ["server" => $e->getMessage()], 500);
         } catch (\Exception $e) {
+            $this->logAuthentication(null, 'unknown', false, 'logout', 'Exception: ' . $e->getMessage());
             return $this->responseError("Login Failed!", ["server" => $e->getMessage()], 500);
         }
     }
@@ -165,13 +176,21 @@ class AuthController extends Controller
                 return $this->responseError("Token not found!", null, 401);
             }
 
+            // Get the user before refreshing
+            $user = JWTAuth::toUser($token);
+
             // Refresh the token
             $token = JWTAuth::refresh($token);
 
+            // Log token refresh whenever refreshes
+            $this->logAuthentication($user->id, $user->username, true, 'refresh');
+
             return $this->responseSuccess(['token' => $token], "Token refreshed successfully!");
         } catch (JWTException $e) {
+            $this->logAuthentication(null, 'unknown', false, 'refresh', 'JWT Exception: ' . $e->getMessage());
             return $this->responseError("Token could not be refreshed!", ["server" => $e->getMessage()], 500);
         } catch (\Exception $e) {
+            $this->logAuthentication(null, 'unknown', false, 'refresh', 'Exception: ' . $e->getMessage());
             return $this->responseError("Token refresh failed!", ["server" => $e->getMessage()], 500);
         }
     }
@@ -203,6 +222,10 @@ class AuthController extends Controller
         }
 
         try {
+            $user = User::where('email', $request->email)->first();
+            if (!$user) {
+                return $this->responseError("User not found!", null, 404);
+            }
             // Check for existing reset token
             $oldToken = DB::table('password_reset_tokens')->where('email', $request->email)->first();
             if ($oldToken) {
@@ -220,8 +243,10 @@ class AuthController extends Controller
                 ]);
             }
 
-            // Send Password Reset email
-
+            // Send password reset email
+            Mail::to($request->email)->queue(new PasswordResetMail($user->name, $token, $request->email));
+            // Log password reset request
+            $this->logAuthentication($user->id, $user->username, true, 'password_reset_request');
             return $this->responseSuccess([
                 'token' => $token,
                 'email' => $request->email,
@@ -286,6 +311,9 @@ class AuthController extends Controller
                 // Delete the reset token
                 DB::table('password_reset_tokens')->where('email', $email)->delete();
                 DB::commit();
+
+                // Log successful password reset
+                $this->logAuthentication($user->id ?? null, $user->username ?? 'unknown', true, 'password_reset');
                 return $this->responseSuccess(null, "Password reset successful!");
             }
 
