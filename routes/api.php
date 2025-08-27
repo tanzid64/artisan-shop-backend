@@ -20,6 +20,8 @@ Route::get('/', function () {
 
 // ** Auth Routes **
 Route::post('login', [AuthController::class, 'login'])->name('login');
+Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->name('forgot-password');
+Route::post('reset-password/{token}/{email}', [AuthController::class, 'resetPassword'])->name('reset-password');
 
 // ** Protected Routes **
 Route::middleware('jwt')->group(function () {
