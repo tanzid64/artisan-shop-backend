@@ -45,6 +45,7 @@ jobs:
         run: |
           rm -rf vendor node_modules
           composer install --no-dev --optimize-autoloader
+          php artisan migrate:fresh
           php artisan config:clear
           php artisan route:clear
           php artisan cache:clear
