@@ -3,7 +3,7 @@ name: Deploy Laravel to Shared Hosting
 on:
   push:
     branches:
-      - main   # or your default branch
+      - main # or your default branch
 
 jobs:
   deploy:
@@ -31,7 +31,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4' # Match your hosting PHP version
+          php-version: "8.4" # Match your hosting PHP version
 
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader
@@ -57,8 +57,6 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./
-          server-dir: /public_html
           exclude: |
             **/.git*
             **/.github*
