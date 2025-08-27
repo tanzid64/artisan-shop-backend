@@ -18,13 +18,13 @@ jobs:
         with:
           php-version: '8.4' # Match your hosting PHP version
 
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader
+
       - name: Create temporary .env
         run: |
           cp .env.example .env || touch .env
           php artisan key:generate
-
-      - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader
 
       - name: Prepare deployment package
         run: |
