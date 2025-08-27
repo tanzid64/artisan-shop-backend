@@ -20,10 +20,28 @@ class AuthController extends Controller
     private function logAuthentication($userId, $username, $success, $action = 'unknown', $error = null)
     {
         try {
+            // Ensure table is exist
+            $this->ensureAuthLogTableExists('auth_logs');
             // Auth Log Entry
-            DB::table('auth_logs')->insert([]);
-        } catch (\Throwable $th) {
-            //throw $th;
+            // Insert log entry
+            DB::table('artisan_shop.auth_logs')->insert([
+                'user_id' => $userId,
+                'username' => $username,
+                'success' => $success,
+                'action' => $action,
+                'error_message' => $error,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                'created_at' => Carbon::now()
+            ]);
+        } catch (\Exception $e) {
+            // Prevent throw exception if logging fails - just log to laravel log
+            Log::error('Failed to log authentication attempt', [
+                'error' => $e->getMessage(),
+                'user_id' => $userId,
+                'username' => $username,
+                'action' => $action
+            ]);
         }
     }
 
