@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history required to switch branches
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -20,21 +22,17 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      - name: Prepare deployment package
+      - name: Commit to build branch
         run: |
-          rm -rf vendor node_modules
-          composer install --no-dev --optimize-autoloader
+          git config user.name "github-action-build"
+          git config user.email "tanzid3@gmail.com"
+          git checkout -b build
 
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          exclude: |
-            .git
-            .github
-            tests
-            storage/logs
-            .env
-            .htaccess
+          # remove vendor from gitignore in build branch
+          sed -i '/\/vendor/d' .gitignore
+
+          git add .gitignore
+          git add vendor/ -f
+          git commit -m "Build"
+          git push origin build --force
+      
