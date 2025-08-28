@@ -5,9 +5,6 @@ on:
     branches:
       - main # or your default branch
 
-permissions:
-  contents: write # allow pushing to repo
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -17,56 +14,18 @@ jobs:
         with:
           fetch-depth: 0 # Full history required to switch branches
 
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.4" # Match your hosting PHP version
-
-      - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader
-
-      - name: Connect DB and Clear optimize
-        run: |
-          cp .env.example .env
-          php artisan key:generate
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
-          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
-          echo "DB_DATABASE=${{ secrets.DB_NAME }}" >> .env
-          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          php artisan key:generate --no-interaction
-          php artisan optimize:clear
-          rm -f .env
-
-
-      - name: Commit to build branch
-        run: |
-          git config user.name "github-action-build"
-          git config user.email "tanzid3@gmail.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-
-          # create or reset build branch from main
-          git checkout -B build origin/main
-
-          # remove vendor from gitignore in build branch
-          sed -i '/\/vendor/d' .gitignore
-
-          git add .gitignore
-          git add vendor/ -f
-          git commit -m "Build" || echo "No changes to commit"
-
-          git push origin build --force
-
       # 6️⃣ SSH into Hostiger and clear caches on live server
-      - name: Clear Laravel caches on Hostiger
+      - name: Deploy to Hostinger
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.HOSTINGER_HOST }}
           username: ${{ secrets.HOSTINGER_USER }}
-          password: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}   # or use private_key
+          key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}   # or use private_key
           port: ${{secrets.HOSTINGER_PORT}}
           script: |
-            cd ~/public_html
+            cd ~/domains/artisanback.tanzid.site/public_html
+            git pull origin main
+            composer2 install --no-dev --optimize-autoloader
             php artisan view:clear
             php artisan cache:clear
             php artisan config:cache
