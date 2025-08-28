@@ -25,6 +25,20 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader
 
+      - name: Connect DB and Clear optimize
+        run: |
+          cp .env.enxample .env
+          php artisan key:generate
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+          echo "DB_DATABASE=${{ secrets.DB_NAME }}" >> .env
+          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          php artisan key:generate --no-interaction
+          php artisan optimize:clear
+          rm -f .env
+
+
       - name: Commit to build branch
         run: |
           git config user.name "github-action-build"
