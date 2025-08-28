@@ -3,29 +3,84 @@ name: Deploy Laravel to Shared Hosting
 on:
   push:
     branches:
-      - main # or your default branch
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      # 1️⃣ Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Full history required to switch branches
+          fetch-depth: 0
 
-      # 6️⃣ SSH into Hostiger and clear caches on live server
+      # 2️⃣ Set up PHP (optional, if you need composer locally)
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4 # or your Laravel PHP version
+
+      # 3️⃣ Install Composer dependencies locally to speed up deployment
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      # 4️⃣ Zip the project
+      - name: Zip project
+        run: zip -r deploy.zip . -x ".git/*"
+
+      # 5️⃣ Upload and deploy via SSH
       - name: Deploy to Hostinger
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.HOSTINGER_HOST }}
           username: ${{ secrets.HOSTINGER_USER }}
-          key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}   # or use private_key
-          port: ${{secrets.HOSTINGER_PORT}}
+          key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.HOSTINGER_PORT }}
           script: |
-            cd ~/domains/artisanback.tanzid.site/public_html
-            git pull origin main
-            composer2 install --no-dev --optimize-autoloader
+            cd ~/domains/artisanback.tanzid.site
+
+            # Backup existing files (optional but safe)
+            if [ -d "backup" ]; then rm -rf backup; fi
+            mkdir backup
+            cp -r * backup/
+
+            # Remove old files except .env
+            find . -maxdepth 1 ! -name "." ! -name ".env" ! -name "backup" ! -name ".htaccess" -exec rm -rf {} +
+
+            # Upload zip via scp (we'll handle it below)
+            exit 0
+
+      # 6️⃣ Upload zip via SCP
+      - name: Upload zip to server
+        uses: appleboy/scp-action@v0.1.6
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          username: ${{ secrets.HOSTINGER_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.HOSTINGER_PORT }}
+          source: "deploy.zip"
+          target: "~/domains/artisanback.tanzid.site/"
+
+      # 7️⃣ Extract zip and finalize deployment
+      - name: Extract and deploy
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          username: ${{ secrets.HOSTINGER_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.HOSTINGER_PORT }}
+          script: |
+            cd ~/domains/artisanback.tanzid.site
+            unzip -o deploy.zip
+            rm deploy.zip
+
+            # Artisan commands
+            php artisan optimize:clear
             php artisan view:clear
             php artisan cache:clear
             php artisan config:cache
+            php artisan optimize
+
+            echo "✅ Deployment completed successfully!"
