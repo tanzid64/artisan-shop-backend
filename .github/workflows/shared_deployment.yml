@@ -39,7 +39,7 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
           port: ${{ secrets.HOSTINGER_PORT }}
           script: |
-            cd ~/domains/artisanback.tanzid.site
+            cd ~/domains/artisanback.tanzid.site/public_html
 
             # Backup existing files (optional but safe)
             if [ -d "backup" ]; then rm -rf backup; fi
@@ -61,7 +61,7 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
           port: ${{ secrets.HOSTINGER_PORT }}
           source: "deploy.zip"
-          target: "~/domains/artisanback.tanzid.site/"
+          target: "~/domains/artisanback.tanzid.site/public_html/"
 
       # 7️⃣ Extract zip and finalize deployment
       - name: Extract and deploy
@@ -72,7 +72,7 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
           port: ${{ secrets.HOSTINGER_PORT }}
           script: |
-            cd ~/domains/artisanback.tanzid.site
+            cd ~/domains/artisanback.tanzid.site/public_html
             unzip -o deploy.zip
             rm deploy.zip
 
