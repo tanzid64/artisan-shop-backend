@@ -56,3 +56,17 @@ jobs:
           git commit -m "Build" || echo "No changes to commit"
 
           git push origin build --force
+
+      # 6️⃣ SSH into Hostiger and clear caches on live server
+      - name: Clear Laravel caches on Hostiger
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          username: ${{ secrets.HOSTINGER_USER }}
+          password: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}   # or use private_key
+          port: ${{secrets.HOSTINGER_PORT}}
+          script: |
+            cd ~/public_html
+            php artisan view:clear
+            php artisan cache:clear
+            php artisan config:cache
