@@ -44,7 +44,8 @@ jobs:
             # Backup existing files (optional but safe)
             if [ -d "backup" ]; then rm -rf backup; fi
             mkdir backup
-            cp -r * backup/
+            # Copy everything except backup
+            rsync -av --exclude='backup' ./ backup/
 
             # Remove old files except .env
             find . -maxdepth 1 ! -name "." ! -name ".env" ! -name "backup" ! -name ".htaccess" -exec rm -rf {} +
