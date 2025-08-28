@@ -1,61 +1,212 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Artisan Shop Backend (Laravel 12)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A production-ready REST API backend for Artisan Shop built with Laravel 12, PHP 8.2+, and JWT authentication. It includes role-based routing, password reset flow, CORS handling, database-backed sessions/cache/queue, and helpful developer scripts.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- JWT-based authentication (login, refresh, logout, profile)
+- Password reset flow (request + reset)
+- Role-based route groups for admin and vendor
+- CORS enabled for API consumers
+- Database-backed session, cache, and queue
+- Ready-to-run dev script that starts server, queue listener, and Vite
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tech Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP ^8.2, Laravel ^12.0
+- MySQL (default in .env.example)
+- JWT Auth: tymon/jwt-auth ^2.2
+- Node + Vite (for asset dev tooling), TailwindCSS
 
-## Learning Larave
+## Requirements
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- PHP 8.2+
+- Composer 2.x
+- MySQL 8.x (or compatible)
+- Node.js 18+ and npm 9+ (for Vite/dev tooling)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Quick Start
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1) Clone and install dependencies
 
-## Laravel Sponsors
+```bash
+composer install
+npm install
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+2) Create environment file
 
-### Premium Partners
+- Linux/macOS:
+```bash
+cp .env.example .env
+```
+- Windows (CMD):
+```bat
+copy .env.example .env
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+3) Configure environment
 
-## Contributing
+- Set your app key and base URL
+```bash
+php artisan key:generate
+```
+- Set database connection in .env. IMPORTANT: This project logs authentication activity into the `artisan_shop` schema by default. Either:
+  - Set DB_DATABASE=artisan_shop and create that database, or
+  - Update the code paths that reference the `artisan_shop` schema (AuthController::ensureAuthLogTableExists) to match your schema.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Create the database (example):
+```sql
+CREATE DATABASE artisan_shop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-## Code of Conduct
+4) Configure JWT
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Generate the JWT secret key:
+```bash
+php artisan jwt:secret
+```
 
-## Security Vulnerabilities
+5) Migrate database
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+This project uses database drivers for session, cache, and queue. Ensure these tables exist:
+```bash
+php artisan migrate
+php artisan session:table
+php artisan cache:table
+php artisan queue:table
+php artisan migrate
+```
+
+6) Run the application
+
+- One command (recommended):
+```bash
+composer run dev
+```
+This runs the Laravel server, queue listener, and Vite concurrently.
+
+- Or run individually:
+```bash
+php artisan serve
+php artisan queue:listen --tries=1
+npm run dev
+```
+
+Default app URL: http://localhost
+API base path: http://localhost/api
+
+## API Overview
+
+Public endpoints:
+- GET /api/ — API info/health metadata
+- POST /api/login — Authenticate and receive a JWT access token
+- POST /api/forgot-password — Request password reset link/token
+- POST /api/reset-password/{token}/{email} — Complete password reset
+
+Protected endpoints (Authorization: Bearer <token>):
+- POST /api/logout — Invalidate the current token
+- POST /api/refresh — Refresh the JWT token
+- GET /api/me — Get the authenticated user profile
+
+Admin and Vendor route groups (protected):
+- Admin: /api/admin/* (requires role: admin)
+- Vendor: /api/vendor/* (requires role: vendor)
+
+Note: Role enforcement uses a custom RoleMiddleware. Ensure your authenticated user model exposes a `role` attribute.
+
+### Request/Response Examples
+
+Login:
+```bash
+curl -X POST http://localhost/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"your-password"}'
+```
+Response body (example):
+```json
+{
+  "success": true,
+  "message": "Login successful!",
+  "data": {
+    "token": "<jwt-token>",
+    "token_type": "Bearer",
+    "access_token_expires_in": 86400,
+    "refresh_token_expires_in": 1209600,
+    "user": {"id": 1, "username": "john", "role": "admin"}
+  }
+}
+```
+
+Authenticated request:
+```bash
+curl http://localhost/api/me \
+  -H "Authorization: Bearer <jwt-token>"
+```
+
+Forgot password:
+```bash
+curl -X POST http://localhost/api/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com"}'
+```
+
+Reset password:
+```bash
+curl -X POST \
+  http://localhost/api/reset-password/<token>/<email> \
+  -H "Content-Type: application/json" \
+  -d '{"password":"new-password","password_confirmation":"new-password"}'
+```
+
+## Environment Configuration
+
+Commonly used variables in .env:
+
+- APP_NAME, APP_ENV, APP_URL
+- DB_CONNECTION, DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD
+- SESSION_DRIVER=database
+- CACHE_STORE=database
+- QUEUE_CONNECTION=database
+- MAIL_MAILER=log (default: emails logged to storage/logs/laravel.log)
+- JWT_SECRET (generated by `php artisan jwt:secret`)
+- JWT_TTL (minutes, default 1440) and JWT_REFRESH_TTL (minutes, default 20160)
+
+CORS: A permissive CORS middleware is applied to the `api` group (Access-Control-Allow-Origin: *). Adjust app/Http/Middleware/CORSMiddleware.php for production.
+
+## Development Tips
+
+- If you’re using the password reset flow, the mailable is queued. Keep a queue worker running (e.g., `php artisan queue:listen`). With MAIL_MAILER=log, messages are logged.
+- For Postman/Insomnia, set the Authorization header to `Bearer <token>` for protected endpoints.
+- Vite is included for front-end asset dev. It’s optional if you’re only consuming the API.
+
+## Testing
+
+Run tests:
+```bash
+composer run test
+```
+
+## Troubleshooting
+
+- 401 Unauthorized / Token is Invalid or Expired:
+  - Ensure Authorization header: `Authorization: Bearer <token>`
+  - Regenerate JWT secret: `php artisan jwt:secret`
+- Password reset email not received:
+  - With MAIL_MAILER=log, check storage/logs/laravel.log
+  - Ensure queue worker is running
+- Database errors for `artisan_shop.auth_logs`:
+  - Set DB_DATABASE=artisan_shop or update the hardcoded schema in AuthController to your database name
+- Queue/Session/Cache driver errors:
+  - Ensure you ran `session:table`, `cache:table`, `queue:table`, then `migrate`
+
+## Security Notes
+
+- Use HTTPS in production
+- Set secure CORS rules for production
+- Keep JWT_SECRET out of version control and rotate if leaked
+- Set APP_ENV=production and APP_DEBUG=false in production
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is based on the Laravel framework (MIT). Your project’s license may differ—update this section as needed.
