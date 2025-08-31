@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Slider;
+use App\Traits\ImageUploadTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class SliderController extends Controller
 {
+    use ImageUploadTrait;
     /**
      * Display a listing of the resource.
      */
@@ -41,8 +45,23 @@ class SliderController extends Controller
             $banner = $request->file('banner');
             $bannerName = time() . '.' . $banner->getClientOriginalExtension();
             $bannerPath = $this->uploadImage($banner, $bannerName, 'cloudinary', 'sliders');
-        } catch (\Throwable $th) {
-            //throw $th;
+
+            // Store the data in the database
+            $slider = Slider::create([
+                'banner' => $bannerPath,
+                'type' => $request->type,
+                'title' => $request->title,
+                'starting_price' => $request->starting_price,
+                'btn_url' => $request->btn_url,
+                'serial' => $request->serial,
+                'status' => $request->status,
+            ]);
+            return $this->responseCreated(['id' => $slider->id], "Slider created successfully!");
+        } catch (\Exception $e) {
+            Log::error('Error creating slider: ' . $e->getMessage());
+            return $this->responseError('Failed to create slider. Please try again later.', [
+                "server" => $e->getMessage()
+            ]);
         }
     }
 
