@@ -17,7 +17,15 @@ class SliderController extends Controller
      */
     public function index()
     {
-        //
+        try {
+            $sliders = Slider::paginate(10);
+            return $this->responseSuccess($sliders, "Sliders retrieved successfully.");
+        } catch (\Exception $th) {
+            Log::error('Error fetching sliders: ' . $th->getMessage());
+            return $this->responseError('Failed to fetch sliders. Please try again later.', [
+                "server" => $th->getMessage()
+            ]);
+        }
     }
 
     /**
