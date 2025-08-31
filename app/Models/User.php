@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Traits\CommonModelArrtibuteTrait;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -12,6 +13,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
+    use CommonModelArrtibuteTrait;
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
@@ -83,22 +85,12 @@ class User extends Authenticatable implements JWTSubject
     {
         return $value ? Carbon::parse($value)->format('d M Y, h:i:s A') : null;
     }
-    public function getCreatedAtAttribute($value)
-    {
-        return $value ? Carbon::parse($value)->format('d M Y, h:i:s A') : null;
-    }
-    public function getUpdatedAtAttribute($value)
-    {
-        return $value ? Carbon::parse($value)->format('d M Y, h:i:s A') : null;
-    }
+
     public function getIsEmailVerifiedAttribute()
     {
         return $this->email_verified_at ? true : false;
     }
-    public function getStatusNameAttribute()
-    {
-        return $this->status ? "Active" : "Inactive";
-    }
+
     public function getAvatarUrlAttribute()
     {
         return $this->avatar ? "" : null;

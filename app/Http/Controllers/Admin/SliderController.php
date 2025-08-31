@@ -15,10 +15,35 @@ class SliderController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $sliders = Slider::paginate(10);
+            $orderBy = $request->input('order_by', 'created_at');
+            $direction = $request->input('direction', 'desc');
+            $perPage = (int) $request->input('per_page', 10);
+
+            $query = Slider::query();
+            // Search by title, type, or starting_price
+            if ($request->filled('search')) {
+                $search = request()->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'LIKE', "%{$search}%")
+                        ->orWhere('type', 'LIKE', "%{$search}%")
+                        ->orWhere('starting_price', 'LIKE', "%{$search}%");
+                });
+            }
+
+            // ✅ Apply dynamic order
+            $allowedSorts = ['created_at', 'serial', 'title', 'type', 'starting_price'];
+            if (in_array($orderBy, $allowedSorts)) {
+                $query->orderBy($orderBy, $direction);
+            } else {
+                // Fallback
+                $query->orderBy('created_at', 'desc');
+                $query->orderBy('serial', 'asc');
+            }
+            // Paginate the results (10 per page)
+            $sliders = $query->paginate($perPage);
             return $this->responseSuccess($sliders, "Sliders retrieved successfully.");
         } catch (\Exception $th) {
             Log::error('Error fetching sliders: ' . $th->getMessage());
