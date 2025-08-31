@@ -60,6 +60,29 @@ return [
             'report' => false,
         ],
 
+        'supabase' => [
+            'driver' => 's3',
+            'key' => env('SUPABASE_KEY'),
+            'secret' => env('SUPABASE_SECRET'),
+            'region' => env('SUPABASE_REGION', ''),
+            'bucket' => env('SUPABASE_BUCKET'),
+            'endpoint' => env('SUPABASE_STORAGE_ENDPOINT'),
+            'url' => env('SUPABASE_PUBLIC_URL'),
+            'use_path_style_endpoint' => true,
+            'visibility' => 'public',
+            'throw' => true,
+        ],
+        
+        'cloudinary' => [
+            'driver' => 'cloudinary',
+            'key' => env('CLOUDINARY_KEY'),
+            'secret' => env('CLOUDINARY_SECRET'),
+            'cloud' => env('CLOUDINARY_CLOUD_NAME'),
+            'url' => env('CLOUDINARY_URL'),
+            'secure' => (bool) env('CLOUDINARY_SECURE', true),
+            'prefix' => env('CLOUDINARY_PREFIX'),
+        ],
+
     ],
 
     /*
