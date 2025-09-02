@@ -18,32 +18,40 @@ class SliderController extends Controller
     public function index(Request $request)
     {
         try {
-            $orderBy = $request->input('order_by', 'created_at');
-            $direction = $request->input('direction', 'desc');
-            $perPage = (int) $request->input('per_page', 10);
+            $search = $request->input('search', '');
+            $perPage = $request->input('per_page', 10);
+            $page = $request->input('page', 1);
+            $sortBy = $request->input('sort_by', 'created_at');
+            $sortDir = $request->input('sort_dir', 'desc');
+            $status = $request->input('status', 'all');
 
             $query = Slider::query();
-            // Search by title, type, or starting_price
-            if ($request->filled('search')) {
-                $search = request()->input('search');
-                $query->where(function ($q) use ($search) {
-                    $q->where('title', 'LIKE', "%{$search}%")
-                        ->orWhere('type', 'LIKE', "%{$search}%")
-                        ->orWhere('starting_price', 'LIKE', "%{$search}%");
-                });
+
+            // Apply search filter if provided
+            if (!empty($search)) {
+                $query->where(
+                    function ($q) use ($search) {
+                        $q->where('type', 'like', "%$search%")
+                            ->orWhere('title', 'like', "%$search%")
+                            ->orWhere('starting_price', 'like', "%$search%");
+                    }
+                );
             }
 
-            // ✅ Apply dynamic order
-            $allowedSorts = ['created_at', 'serial', 'title', 'type', 'starting_price'];
-            if (in_array($orderBy, $allowedSorts)) {
-                $query->orderBy($orderBy, $direction);
-            } else {
-                // Fallback
-                $query->orderBy('created_at', 'desc');
-                $query->orderBy('serial', 'asc');
+            // Apply status filter
+            if ($status !== 'all') {
+                $query->where('status', $status);
             }
-            // Paginate the results (10 per page)
-            $sliders = $query->paginate($perPage);
+
+            // Apply sorting
+            $query->orderBy($sortBy, $sortDir);
+
+            // ✅ Apply dynamic order with validation
+            $sliders = Slider::paginate($perPage);
+
+            if ($sliders->isEmpty()) {
+                return $this->responseNotFound('No sliders found.');
+            }
             return $this->responseSuccess($sliders, "Sliders retrieved successfully.");
         } catch (\Exception $th) {
             Log::error('Error fetching sliders: ' . $th->getMessage());
