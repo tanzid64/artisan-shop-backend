@@ -20,12 +20,11 @@ class SliderController extends Controller
         try {
             $search = $request->input('search', '');
             $perPage = $request->input('per_page', 10);
-            $page = $request->input('page', 1);
             $sortBy = $request->input('sort_by', 'created_at');
             $sortDir = $request->input('sort_dir', 'desc');
             $status = $request->input('status', 'all');
 
-            $query = Slider::query();
+            $query = Slider::query()->select('id', 'type', 'title', 'starting_price', 'btn_url', 'serial', 'status', 'created_at');
 
             // Apply search filter if provided
             if (!empty($search)) {
@@ -40,14 +39,18 @@ class SliderController extends Controller
 
             // Apply status filter
             if ($status !== 'all') {
-                $query->where('status', $status);
+                if ($status === 'active') {
+                    $query->where('status', 1);
+                } elseif ($status === 'inactive') {
+                    $query->where('status', false);
+                }
             }
 
             // Apply sorting
             $query->orderBy($sortBy, $sortDir);
 
-            // ✅ Apply dynamic order with validation
-            $sliders = Slider::paginate($perPage);
+            // Apply Pagination
+            $sliders = $query->paginate($perPage);
 
             if ($sliders->isEmpty()) {
                 return $this->responseNotFound('No sliders found.');
@@ -86,6 +89,7 @@ class SliderController extends Controller
             $banner = $request->file('banner');
             $bannerName = time() . '.' . $banner->getClientOriginalExtension();
             $bannerPath = $this->uploadImage($banner, $bannerName, 'cloudinary', 'sliders');
+            $bannerUrl = $this->getImageUrl($bannerPath, 'cloudinary');
 
             // Store the data in the database
             $slider = Slider::create([
@@ -93,6 +97,7 @@ class SliderController extends Controller
                 'type' => $request->type,
                 'title' => $request->title,
                 'starting_price' => $request->starting_price,
+                'banner_url' => $bannerUrl,
                 'btn_url' => $request->btn_url,
                 'serial' => $request->serial,
                 'status' => $request->status,

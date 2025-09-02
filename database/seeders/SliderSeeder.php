@@ -13,12 +13,13 @@ class SliderSeeder extends Seeder
      */
     public function run(): void
     {
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 1000; $i++) {
             Slider::create([
                 'banner' => "sliders/1756641578.png",
+                'banner_url' => "https://res.cloudinary.com/dk0z4ums3/image/upload/v1756641578/sliders/1756641578.png",
                 'type' => 'Type ' . ($i + 1),
                 'title' => 'Slider Title ' . ($i + 1),
-                'starting_price' => '$' . (100 + $i * 10),
+                'starting_price' => (100 + $i * 10),
                 'btn_url' => 'https://example.com/slider' . ($i + 1),
                 'serial' => $i + 1,
                 'status' => true,

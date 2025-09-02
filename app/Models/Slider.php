@@ -15,12 +15,5 @@ class Slider extends Model
         'status' => 'boolean',
     ];
     protected $hidden = ['banner'];
-    protected $appends = ['banner_url', 'status_name'];
-
-    public function getBannerUrlAttribute()
-    {
-        return $this->banner
-            ? Storage::disk('cloudinary')->url($this->banner)
-            : null;
-    }
+    protected $appends = ['status_name'];
 }

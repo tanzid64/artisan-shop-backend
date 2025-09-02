@@ -11,7 +11,11 @@ trait ImageUploadTrait
         $path = Storage::disk($diskName)->putFileAs($folder, $file, $fileName, 'public');
         return $path;
     }
-    
+
+    public function getImageUrl(string $path, string $diskName)
+    {
+        return Storage::disk($diskName)->url($path);
+    }
 
     public function removeImage(string $path, string $diskName)
     {

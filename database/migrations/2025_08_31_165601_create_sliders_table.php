@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('type')->index();
             $table->string('title')->index();
-            $table->string('banner');
+            $table->string('banner'); // Cloudinary public ID
+            $table->string('banner_url'); // Cloudinary URL
             $table->decimal('starting_price', 10, 2);
             $table->string('btn_url');
             $table->integer('serial')->default(0);
